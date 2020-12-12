@@ -1,0 +1,6 @@
+[
+  {
+    "host": "localhost",
+    "targets": ["https://gprs-api.geopits.com/auth/login/"]
+  }
+]
