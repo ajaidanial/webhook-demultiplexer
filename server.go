@@ -17,6 +17,14 @@ type Configuration struct {
 	Targets []string `json:"targets"`
 }
 
+// InboundValue holds the inbound values from a received request.
+type InboundValue struct {
+	Host        string
+	Method      string
+	Data        echo.Map
+	QueryString string
+}
+
 /**
 This file opens the `config.json` file and reads the contents and returns the data.
 This is used by other functions to get the configurations.
@@ -69,17 +77,26 @@ Based on the config.json file this endpoint handles and demultiplexes the reques
 func webhookHandler(context echo.Context) error {
 	request := context.Request()
 
-	// inbound data
-	triggeredHost := request.Host
-	triggeredMethod := request.Method
+	// inbound values
+	inboundValue := InboundValue{
+		Host:        request.Host,
+		Method:      request.Method,
+		Data:        echo.Map{},
+		QueryString: context.QueryString(),
+	}
+
+	// getting the reponse body
+	if error := context.Bind(&inboundValue.Data); error != nil {
+		return error
+	}
 
 	// check given config based on inbound data
 	for _, config := range getConfigurations() {
 
-		if config.Host == triggeredHost {
+		if config.Host == inboundValue.Host {
 			targetsToHit := config.Targets
 			for _, target := range targetsToHit {
-				fmt.Println(target, triggeredMethod)
+				fmt.Println(target, inboundValue.Method)
 			}
 		}
 	}
