@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 // Configuration defines the single config dict from the config.json file.
@@ -42,9 +43,13 @@ func main() {
 	// server instance
 	server := echo.New()
 
+	// middlewares & config
+	server.Pre(middleware.AddTrailingSlash())
+	server.Use(middleware.Logger())
+
 	// url mapping
-	server.Any("/webhook", webhookHandler)
-	server.GET("/ping", pingHandler)
+	server.Any("/webhook/", webhookHandler)
+	server.GET("/ping/", pingHandler)
 
 	// running the server
 	server.Logger.Fatal(server.Start(":8080"))
