@@ -43,6 +43,7 @@ func main() {
 	server := echo.New()
 
 	// url mapping
+	server.Any("/webhook", webhookHandler)
 	server.GET("/ping", pingHandler)
 
 	// running the server
@@ -55,4 +56,12 @@ Like, if in case this is needed for anything.
 */
 func pingHandler(context echo.Context) error {
 	return context.String(http.StatusOK, "pong")
+}
+
+/**
+Main handler for all the webhooks. This is called using any method, from any where.
+Based on the config.json file this endpoint handles and demultiplexes the requests.
+*/
+func webhookHandler(context echo.Context) error {
+	return context.String(http.StatusOK, "webhookHandler - working")
 }
