@@ -45,7 +45,6 @@ func main() {
 
 	// middlewares & config
 	server.Pre(middleware.AddTrailingSlash())
-	server.Use(middleware.Logger())
 
 	// url mapping
 	server.Any("/webhook/", webhookHandler)
@@ -68,5 +67,22 @@ Main handler for all the webhooks. This is called using any method, from any whe
 Based on the config.json file this endpoint handles and demultiplexes the requests.
 */
 func webhookHandler(context echo.Context) error {
+	request := context.Request()
+
+	// inbound data
+	triggeredHost := request.Host
+	triggeredMethod := request.Method
+
+	// check given config based on inbound data
+	for _, config := range getConfigurations() {
+
+		if config.Host == triggeredHost {
+			targetsToHit := config.Targets
+			for _, target := range targetsToHit {
+				fmt.Println(target, triggeredMethod)
+			}
+		}
+	}
+
 	return context.String(http.StatusOK, "webhookHandler - working")
 }
