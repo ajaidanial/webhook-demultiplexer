@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -70,12 +71,12 @@ Based on the config.json file this endpoint handles and demultiplexes the reques
 func webhookHandler(context echo.Context) error {
 	request := context.Request()
 
+	// getting the reponse body & preparing for request
 	inboundData := echo.Map{}
-
-	// getting the reponse body
 	if error := context.Bind(&inboundData); error != nil {
 		return error
 	}
+	byteArrayData, _ := json.Marshal(inboundData)
 
 	// check given config based on inbound data
 	for _, config := range getConfigurations() {
@@ -88,7 +89,7 @@ func webhookHandler(context echo.Context) error {
 				outboundRequest, _ := http.NewRequest(
 					request.Method,
 					target,
-					nil, // TODO: send inboud data
+					bytes.NewBuffer(byteArrayData),
 				)
 				for headerKey, headerValues := range request.Header {
 					outboundRequest.Header.Set(headerKey, strings.Join(headerValues, ", "))
