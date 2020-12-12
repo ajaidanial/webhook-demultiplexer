@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -15,14 +16,6 @@ import (
 type Configuration struct {
 	Host    string   `json:"host"`
 	Targets []string `json:"targets"`
-}
-
-// InboundValue holds the inbound values from a received request.
-type InboundValue struct {
-	Host        string
-	Method      string
-	Data        echo.Map
-	QueryString string
 }
 
 /**
@@ -77,26 +70,43 @@ Based on the config.json file this endpoint handles and demultiplexes the reques
 func webhookHandler(context echo.Context) error {
 	request := context.Request()
 
-	// inbound values
-	inboundValue := InboundValue{
-		Host:        request.Host,
-		Method:      request.Method,
-		Data:        echo.Map{},
-		QueryString: context.QueryString(),
-	}
+	inboundData := echo.Map{}
 
 	// getting the reponse body
-	if error := context.Bind(&inboundValue.Data); error != nil {
+	if error := context.Bind(&inboundData); error != nil {
 		return error
 	}
 
 	// check given config based on inbound data
 	for _, config := range getConfigurations() {
 
-		if config.Host == inboundValue.Host {
+		if config.Host == request.Host {
 			targetsToHit := config.Targets
 			for _, target := range targetsToHit {
-				fmt.Println(target, inboundValue.Method)
+
+				// prepare the request to be sent
+				outboundRequest, _ := http.NewRequest(
+					request.Method,
+					target,
+					nil, // TODO: send inboud data
+				)
+				for headerKey, headerValues := range request.Header {
+					outboundRequest.Header.Set(headerKey, strings.Join(headerValues, ", "))
+				}
+				fmt.Println("Outbound Request: \n", outboundRequest)
+
+				// send the request and get the response
+				client := &http.Client{}
+				response, error := client.Do(outboundRequest)
+				if error != nil {
+					panic(error)
+				}
+				defer response.Body.Close()
+
+				fmt.Println("Response: \n", response)
+				responseBody, _ := ioutil.ReadAll(response.Body)
+				fmt.Println("Response Body: \n", string(responseBody))
+				fmt.Println("-------------- XXXX --------------")
 			}
 		}
 	}
