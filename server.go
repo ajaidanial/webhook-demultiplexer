@@ -123,10 +123,8 @@ func forwardRequest(target string, inboundData echo.Map, inboundRequest *http.Re
 	}
 
 	client := &http.Client{}
-	response, error := client.Do(outboundRequest)
-	if error != nil {
-		panic(error)
-	}
+	response, responseError := client.Do(outboundRequest)
+	checkAndPanic(responseError)
 	defer response.Body.Close()
 	responseBody, _ := ioutil.ReadAll(response.Body)
 
@@ -139,5 +137,19 @@ func forwardRequest(target string, inboundData echo.Map, inboundRequest *http.Re
 		string(responseBody),
 	)
 
+	// console log
 	fmt.Println(log)
+	// file log
+	fileError := ioutil.WriteFile("events.log", []byte(log), 0644)
+	checkAndPanic(fileError)
+}
+
+/**
+This function checks if there are errors present. If so, calls the `panic()` function.
+This is defined as a function to make things DRY.
+*/
+func checkAndPanic(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
