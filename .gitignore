@@ -164,3 +164,6 @@ Temporary Items
 *.code-workspace
 
 # End of https://www.toptal.com/developers/gitignore/api/go,linux,macos,vscode,jetbrains+all
+
+# Custom project level ignores
+config.json

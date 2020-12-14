@@ -24,11 +24,13 @@ This file opens the `config.json` file and reads the contents and returns the da
 This is used by other functions to get the configurations.
 */
 func getConfigurations() []Configuration {
-	configFile, error := os.Open("config.json")
+	configFileName := "config.json"
+	configFile, error := os.Open(configFileName)
 
 	// error while opening the file
 	if error != nil {
-		fmt.Println("Error while opening config file.", error)
+		fmt.Println("Error while opening configuration file.", error)
+		fmt.Printf("Make sure the `%s` file is present in the project root.\n", configFileName)
 		os.Exit(3)
 	}
 
