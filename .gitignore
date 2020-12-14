@@ -167,3 +167,4 @@ Temporary Items
 
 # Custom project level ignores
 config.json
+*.log
