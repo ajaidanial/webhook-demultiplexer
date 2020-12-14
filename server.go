@@ -83,7 +83,7 @@ Based on the config.json file this endpoint handles and demultiplexes the reques
 func webhookHandler(context echo.Context) error {
 	request := context.Request()
 
-	// getting the reponse body
+	// getting the response body
 	inboundData := echo.Map{}
 	err := context.Bind(&inboundData)
 	checkAndPanic(err)
