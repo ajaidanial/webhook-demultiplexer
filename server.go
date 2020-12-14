@@ -89,8 +89,7 @@ func webhookHandler(context echo.Context) error {
 	for _, config := range getConfigurations() {
 
 		if config.Host == request.Host {
-			targetsToHit := config.Targets
-			for _, target := range targetsToHit {
+			for _, target := range config.Targets {
 
 				// prepare the request to be sent
 				outboundRequest, _ := http.NewRequest(
