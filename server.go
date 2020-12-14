@@ -31,11 +31,11 @@ This is used by other functions to get the configurations.
 */
 func getConfigurations() []Configuration {
 	configFileName := "config.json"
-	configFile, error := os.Open(configFileName)
+	configFile, err := os.Open(configFileName)
 
 	// error while opening the file
-	if error != nil {
-		fmt.Println("Error while opening configuration file.", error)
+	if err != nil {
+		fmt.Println("Error while opening configuration file.", err)
 		fmt.Printf("Make sure the `%s` file is present in the project root.\n", configFileName)
 		os.Exit(3)
 	}
@@ -50,6 +50,9 @@ func getConfigurations() []Configuration {
 }
 
 func main() {
+	// check if everything is fine by getting the configurations
+	getConfigurations()
+
 	// server instance
 	server := echo.New()
 
@@ -81,9 +84,8 @@ func webhookHandler(context echo.Context) error {
 
 	// getting the reponse body
 	inboundData := echo.Map{}
-	if error := context.Bind(&inboundData); error != nil {
-		return error
-	}
+	err := context.Bind(&inboundData)
+	checkAndPanic(err)
 
 	// check given config based on inbound data | de-multiplexer operation
 	for _, config := range getConfigurations() {
@@ -123,8 +125,8 @@ func forwardRequest(target string, inboundData echo.Map, inboundRequest *http.Re
 	}
 
 	client := &http.Client{}
-	response, responseError := client.Do(outboundRequest)
-	checkAndPanic(responseError)
+	response, err := client.Do(outboundRequest)
+	checkAndPanic(err)
 	defer response.Body.Close()
 	responseBody, _ := ioutil.ReadAll(response.Body)
 
@@ -140,8 +142,9 @@ func forwardRequest(target string, inboundData echo.Map, inboundRequest *http.Re
 	// console log
 	fmt.Println(log)
 	// file log
-	fileError := ioutil.WriteFile("events.log", []byte(log), 0644)
-	checkAndPanic(fileError)
+	file, _ := os.OpenFile("events.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	defer file.Close()
+	file.WriteString(log)
 }
 
 /**
