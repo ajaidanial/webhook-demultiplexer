@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  app:
+    image: golang:1.15.3
+    command: go run server.go
+    volumes:
+      - .:/code
+    ports:
+      - 8080:8080
+    working_dir: /code
