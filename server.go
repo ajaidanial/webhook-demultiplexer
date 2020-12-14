@@ -130,6 +130,11 @@ func forwardRequest(target string, inboundData echo.Map, inboundRequest *http.Re
 	defer response.Body.Close()
 	responseBody, _ := ioutil.ReadAll(response.Body)
 
-	fmt.Println("Response: \n", response)
-	fmt.Println("Response Body: \n", string(responseBody))
+	fmt.Printf(
+		"\nFrom: %s \nTarget: %s \nResponse Code: %d \nResponse Body: %s \n\n",
+		inboundRequest.Host,
+		target,
+		response.StatusCode,
+		string(responseBody),
+	)
 }
