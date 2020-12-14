@@ -1,9 +1,0 @@
-[
-  {
-    "host": "localhost:8080",
-    "targets": [
-      "https://gprs-api.geopits.com/auth/login/",
-      "https://gprs-delivery-api.geopits.com/auth/login/"
-    ]
-  }
-]
