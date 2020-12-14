@@ -19,6 +19,11 @@ type Configuration struct {
 	Targets []string `json:"targets"`
 }
 
+// MessageResponse defines the output schema for all the endpoints.
+type MessageResponse struct {
+	Message string `json:"message"`
+}
+
 /**
 This file opens the `config.json` file and reads the contents and returns the data.
 This is used by other functions to get the configurations.
@@ -63,7 +68,7 @@ Handler for the `/ping` endpoint. This is used as a status check for the applica
 Like, if in case this is needed for anything.
 */
 func pingHandler(context echo.Context) error {
-	return context.String(http.StatusOK, "pong")
+	return context.JSON(http.StatusOK, MessageResponse{"pong"})
 }
 
 /**
@@ -114,5 +119,5 @@ func webhookHandler(context echo.Context) error {
 		}
 	}
 
-	return context.String(http.StatusOK, "webhookHandler - working")
+	return context.JSON(http.StatusOK, MessageResponse{"done"})
 }
