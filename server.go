@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -132,11 +133,12 @@ func forwardRequest(target string, inboundData echo.Map, inboundRequest *http.Re
 
 	// make the string log
 	log := fmt.Sprintf(
-		"\nFrom: %s \nTarget: %s \nResponse Code: %d \nResponse Body: %s \n",
+		"\nFrom: %s \nTarget: %s \nResponse Code: %d \nResponse Body: %s \nTime: %s \n",
 		inboundRequest.Host,
 		target,
 		response.StatusCode,
 		string(responseBody),
+		time.Now().String(),
 	)
 
 	// console log
