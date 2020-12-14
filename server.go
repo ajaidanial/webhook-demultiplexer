@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -78,45 +79,57 @@ Based on the config.json file this endpoint handles and demultiplexes the reques
 func webhookHandler(context echo.Context) error {
 	request := context.Request()
 
-	// getting the reponse body & preparing for request
+	// getting the reponse body
 	inboundData := echo.Map{}
 	if error := context.Bind(&inboundData); error != nil {
 		return error
 	}
-	byteArrayData, _ := json.Marshal(inboundData)
 
-	// check given config based on inbound data
+	// check given config based on inbound data | de-multiplexer operation
 	for _, config := range getConfigurations() {
-
-		if config.Host == request.Host {
+		if config.Host == request.Host || config.Host == "*" {
 			for _, target := range config.Targets {
-
-				// prepare the request to be sent
-				outboundRequest, _ := http.NewRequest(
-					request.Method,
-					target,
-					bytes.NewBuffer(byteArrayData),
-				)
-				for headerKey, headerValues := range request.Header {
-					outboundRequest.Header.Set(headerKey, strings.Join(headerValues, ", "))
-				}
-				fmt.Println("Outbound Request: \n", outboundRequest)
-
-				// send the request and get the response
-				client := &http.Client{}
-				response, error := client.Do(outboundRequest)
-				if error != nil {
-					panic(error)
-				}
-				defer response.Body.Close()
-
-				fmt.Println("Response: \n", response)
-				responseBody, _ := ioutil.ReadAll(response.Body)
-				fmt.Println("Response Body: \n", string(responseBody))
-				fmt.Println("-------------- XXXX --------------")
+				// forward the request
+				forwardRequest(target, inboundData, request)
 			}
 		}
 	}
 
 	return context.JSON(http.StatusOK, MessageResponse{"done"})
+}
+
+/**
+This is the main function used to forward the inbound values to specified targets in the
+the config.json file. This is called from the handler for the `/webhook/` endpoint.
+*/
+func forwardRequest(target string, inboundData echo.Map, inboundRequest *http.Request) {
+
+	var processedOutputData io.Reader
+
+	// if body is present, process the data, else let it be nil
+	if inboundData != nil && len(inboundData) > 0 {
+		byteArrayData, _ := json.Marshal(inboundData)
+		processedOutputData = bytes.NewBuffer(byteArrayData)
+	}
+
+	// prepare the request to be sent
+	outboundRequest, _ := http.NewRequest(
+		inboundRequest.Method,
+		target,
+		processedOutputData,
+	)
+	for headerKey, headerValues := range inboundRequest.Header {
+		outboundRequest.Header.Set(headerKey, strings.Join(headerValues, ", "))
+	}
+
+	client := &http.Client{}
+	response, error := client.Do(outboundRequest)
+	if error != nil {
+		panic(error)
+	}
+	defer response.Body.Close()
+	responseBody, _ := ioutil.ReadAll(response.Body)
+
+	fmt.Println("Response: \n", response)
+	fmt.Println("Response Body: \n", string(responseBody))
 }
